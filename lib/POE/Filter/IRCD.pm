@@ -3,7 +3,7 @@ package POE::Filter::IRCD;
 use Carp;
 use vars qw($VERSION);
 
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 sub PUT_LITERAL () { 1 }
 
@@ -225,6 +225,12 @@ eg.
 $hashref = { command => 'PRIVMSG', prefix => 'FooBar!foobar@foobar.com', params => [ '#foobar', 'boo!' ] };
 
 $filter->put( [ $hashref ] );
+
+=item *
+
+debug
+
+Takes no arguments. Toggles debug output.
 
 =back
 

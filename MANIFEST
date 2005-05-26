@@ -1,5 +1,6 @@
-Filter-IRCD.pm
+lib/POE/Filter/IRCD.pm
 MANIFEST
 Makefile.PL
 README
 t/1.t
+META.yml                                 Module meta-data (added by MakeMaker)
