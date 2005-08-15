@@ -1,0 +1,5 @@
+POE::Filter::IRCD
+=================
+
+1.2	Updated testcase. Should be a bit more robuse now.
+1.1	Initial Release
