@@ -3,7 +3,7 @@ package POE::Filter::IRCD;
 use Carp;
 use vars qw($VERSION);
 
-$VERSION = '1.3';
+$VERSION = '1.4';
 
 sub PUT_LITERAL () { 1 }
 
@@ -58,11 +58,16 @@ sub new {
 
 sub debug {
   my ($self) = shift;
+  my ($value) = shift;
 
-  if ( $self->{DEBUG} == 0 ) {
-	$self->{DEBUG} = 1;
-  } else {
+  if ( defined ( $value ) ) {
+	$self->{DEBUG} = $value;
+	return $self->{DEBUG};
+  }
+  if ( $self->{DEBUG} ) {
 	$self->{DEBUG} = 0;
+  } else {
+	$self->{DEBUG} = 1;
   }
 }
 
@@ -73,7 +78,7 @@ sub get {
   foreach my $raw_line (@$raw_lines) {
     warn "->$raw_line \n" if ( $self->{DEBUG} );
     if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
-      my $event = {};
+      my $event = { raw_line => $raw_line };
       $event->{'prefix'} = $prefix if ($prefix);
       $event->{'command'} = uc($command);
       $event->{'params'} = [] if ( defined ( $middles ) || defined ( $trailing ) );
@@ -102,7 +107,7 @@ sub get_one {
   if ( my $raw_line = shift ( @{ $self->{BUFFER} } ) ) {
     warn "->$raw_line \n" if ( $self->{DEBUG} );
     if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
-      my $event = {};
+      my $event = { raw_line => $raw_line };
       $event->{'prefix'} = $prefix if ($prefix);
       $event->{'command'} = uc($command);
       $event->{'params'} = [] if ( defined ( $middles ) || defined ( $trailing ) );
@@ -214,15 +219,17 @@ which represents the lines. The hashref contains the following fields:
   prefix
   command
   params ( this is an arrayref )
+  raw_line 
 
 For example, if the filter receives the following line, the following hashref is produced:
 
   LINE: ':moo.server.net 001 lamebot :Welcome to the IRC network lamebot'
 
   HASHREF: {
-		prefix  => ':moo.server.net',
-		command => '001',
-		params  => [ 'lamebot', 'Welcome to the IRC network lamebot' ],
+		prefix   => ':moo.server.net',
+		command  => '001',
+		params   => [ 'lamebot', 'Welcome to the IRC network lamebot' ],
+		raw_line => ':moo.server.net 001 lamebot :Welcome to the IRC network lamebot',
 	   }
 
 =item *
@@ -239,7 +246,7 @@ eg.
 
 debug
 
-Takes no arguments. Toggles debug output.
+With a true or false argument, enables or disables debug output respectively. Without an argument the behaviour is to toggle the debug status.
 
 =back
 
