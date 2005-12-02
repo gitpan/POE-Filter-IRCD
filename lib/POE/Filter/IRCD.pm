@@ -3,7 +3,7 @@ package POE::Filter::IRCD;
 use Carp;
 use vars qw($VERSION);
 
-$VERSION = '1.2';
+$VERSION = '1.3';
 
 sub PUT_LITERAL () { 1 }
 
@@ -208,12 +208,22 @@ all lines received and sent to STDERR.
 
 get
 
-Takes an arrayref which is contains lines of IRC formatted input. Returns an arrayref of hasrefs
+Takes an arrayref which is contains lines of IRC formatted input. Returns an arrayref of hashrefs
 which represents the lines. The hashref contains the following fields:
 
-prefix
-command
-params ( this is an arrayref )
+  prefix
+  command
+  params ( this is an arrayref )
+
+For example, if the filter receives the following line, the following hashref is produced:
+
+  LINE: ':moo.server.net 001 lamebot :Welcome to the IRC network lamebot'
+
+  HASHREF: {
+		prefix  => ':moo.server.net',
+		command => '001',
+		params  => [ 'lamebot', 'Welcome to the IRC network lamebot' ],
+	   }
 
 =item *
 
@@ -222,9 +232,8 @@ put
 Takes an arrayref containing hashrefs of IRC data and returns an arrayref containing IRC formatted lines.
 eg.
 
-$hashref = { command => 'PRIVMSG', prefix => 'FooBar!foobar@foobar.com', params => [ '#foobar', 'boo!' ] };
-
-$filter->put( [ $hashref ] );
+  $hashref = { command => 'PRIVMSG', prefix => 'FooBar!foobar@foobar.com', params => [ '#foobar', 'boo!' ] };
+  $filter->put( [ $hashref ] );
 
 =item *
 
