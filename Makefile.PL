@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 			  'NAME'	=> 'POE::Filter::IRCD',
 			  'PREREQ_PM' => {
-							  'POE'    => 0.06_07,
+							  'POE'    => 0.3202,
 							 },
 			  'VERSION_FROM' => 'lib/POE/Filter/IRCD.pm', # finds $VERSION
 			  'dist' => { 'COMPRESS' => 'gzip --best' },

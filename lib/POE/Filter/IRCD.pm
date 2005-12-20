@@ -1,20 +1,22 @@
 package POE::Filter::IRCD;
 
+use strict;
+use warnings;
 use Carp;
 use vars qw($VERSION);
 
-$VERSION = '1.4';
+$VERSION = '1.5';
 
 sub PUT_LITERAL () { 1 }
 
 # Probably some other stuff should go here.
 
-my $g = {
+our $g = {
   space			=> qr/\x20+/o,
   trailing_space	=> qr/\x20*/o,
 };
 
-my $irc_regex = qr/^
+our $irc_regex = qr/^
   (?:
     \x3a                #  : comes before hand
     (\S+)               #  [prefix]
@@ -127,6 +129,7 @@ sub put {
 
   foreach my $event (@$events) {
     if (ref $event eq 'HASH') {
+      my $colonify = ( defined $event->{colonify} ? $event->{colonify} : $self->{colonify} );
       if ( PUT_LITERAL || checkargs($event) ) {
         my $raw_line = '';
         $raw_line .= (':' . $event->{'prefix'} . ' ') if (exists $event->{'prefix'});
@@ -139,7 +142,7 @@ sub put {
 			$raw_line .= $param . ' ';
 			$param = shift @$params;
 		}
-		$raw_line .= ':' if ($param =~ m/\x20/);
+		$raw_line .= ':' if ( $param =~ m/\x20/ or $colonify );
 		$raw_line .= $param;
 	}
         push @$raw_lines, $raw_line;
@@ -157,13 +160,14 @@ sub put {
 
 # This thing is far from correct, dont use it.
 sub checkargs {
+  my $event = shift || return;
   warn("Invalid characters in prefix: " . $event->{'prefix'} . "\n")
     if ($event->{'prefix'} =~ m/[\x00\x0a\x0d\x20]/);
   warn("Undefined command passed.\n")
     unless ($event->{'command'} =~ m/\S/o);
   warn("Invalid command: " . $event->{'command'} . "\n")
     unless ($event->{'command'} =~ m/^(?:[a-zA-Z]+|\d{3})$/o);
-  foreach $middle (@{$event->{'middles'}}) {
+  foreach my $middle (@{$event->{'middles'}}) {
     warn("Invalid middle: $middle\n")
       unless ($middle =~ m/^[^\x00\x0a\x0d\x20\x3a][^\x00\x0a\x0d\x20]*$/);
   }
@@ -183,7 +187,7 @@ POE::Filter::IRCD -- A POE-based parser for the IRC protocol.
 
     use POE::Filter::IRCD;
 
-    my $filter = POE::Filter::IRCD->new( DEBUG => 1 );
+    my $filter = POE::Filter::IRCD->new( DEBUG => 1, colonify => 0 );
     my $arrayref = $filter->get( [ $hashref ] );
     my $arrayref2 = $filter->put( $arrayref );
 
@@ -206,8 +210,9 @@ lines.
 
 new
 
-Creates a new POE::Filter::IRCD object. The only useful argument to pass is DEBUG which will print 
-all lines received and sent to STDERR.
+Creates a new POE::Filter::IRCD object. Takes two optional arguments: DEBUG which will print 
+all lines received to STDERR; 'colonify', set to 1 to force the filter to always colonify the
+last param passed in a put(), default is 0. See below for more detail.
 
 =item *
 
@@ -237,9 +242,16 @@ For example, if the filter receives the following line, the following hashref is
 put
 
 Takes an arrayref containing hashrefs of IRC data and returns an arrayref containing IRC formatted lines.
+Optionally, one can specify 'colonify' to override the global colonification option.
 eg.
 
-  $hashref = { command => 'PRIVMSG', prefix => 'FooBar!foobar@foobar.com', params => [ '#foobar', 'boo!' ] };
+  $hashref = { 
+		command => 'PRIVMSG', 
+		prefix => 'FooBar!foobar@foobar.com', 
+		params => [ '#foobar', 'boo!' ],
+		colonify => 1, # Override the global colonify option for this record only.
+	      };
+
   $filter->put( [ $hashref ] );
 
 =item *
