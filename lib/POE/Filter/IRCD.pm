@@ -4,8 +4,9 @@ use strict;
 use warnings;
 use Carp;
 use vars qw($VERSION);
+use base qw(POE::Filter);
 
-$VERSION = '1.5';
+$VERSION = '1.6';
 
 sub PUT_LITERAL () { 1 }
 
