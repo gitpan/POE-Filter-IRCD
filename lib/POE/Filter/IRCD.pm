@@ -6,7 +6,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '1.6';
+$VERSION = '1.7';
 
 sub PUT_LITERAL () { 1 }
 
@@ -135,8 +135,8 @@ sub put {
         my $raw_line = '';
         $raw_line .= (':' . $event->{'prefix'} . ' ') if (exists $event->{'prefix'});
         $raw_line .= $event->{'command'};
-	my $params = [ @{ $event->{'params'} } ];
-	if (ref $params eq 'ARRAY' and @$params) {
+	if ( $event->{'params'} and ref $event->{'params'} eq 'ARRAY' ) {
+		my $params = [ @{ $event->{'params'} } ];
 		$raw_line .= ' ';
 		my $param = shift @$params;
 		while (@$params) {
