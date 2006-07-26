@@ -1,6 +1,7 @@
 POE::Filter::IRCD
 =================
 
+1.8	Added get_pending() method.
 1.7	Bug in put() that choked when {params} didn't exist.
 1.6	Inherits from POE::Filter now so it won't barf when Stackable
 	is updated.

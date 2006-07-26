@@ -6,7 +6,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '1.7';
+$VERSION = '1.8';
 
 sub PUT_LITERAL () { 1 }
 
@@ -124,6 +124,10 @@ sub get_one {
   return $events;
 }
 
+sub get_pending {
+  return;
+}
+
 sub put {
   my ($self, $events) = @_;
   my $raw_lines = [];
@@ -152,7 +156,7 @@ sub put {
         next;
       }
     } else {
-      warn "non hashref passed to put()\n";
+      warn "non hashref passed to put(): $event\n";
     }
   }
   return $raw_lines;
