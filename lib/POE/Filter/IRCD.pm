@@ -6,9 +6,9 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '1.8';
+$VERSION = '1.9';
 
-sub PUT_LITERAL () { 1 }
+sub _PUT_LITERAL () { 1 }
 
 # Probably some other stuff should go here.
 
@@ -47,10 +47,6 @@ our $irc_regex = qr/^
   $g->{'trailing_space'}
 $/x;
 
-sub get_options {
-  # Nothing here yet... still stubbing out as to how I'm gonna lay this out.
-}
-
 sub new {
   my $type = shift;
   croak "$type requires an even number of parameters" if @_ % 2;
@@ -60,8 +56,8 @@ sub new {
 }
 
 sub debug {
-  my ($self) = shift;
-  my ($value) = shift;
+  my $self = shift;
+  my $value = shift;
 
   if ( defined ( $value ) ) {
 	$self->{DEBUG} = $value;
@@ -97,14 +93,11 @@ sub get {
 
 sub get_one_start {
   my ($self, $raw_lines) = @_;
-
-  foreach my $raw_line (@$raw_lines) {
-	push ( @{ $self->{BUFFER} }, $raw_line );
-  }
+  push @{ $self->{BUFFER} }, $_ for @$raw_lines;
 }
 
 sub get_one {
-  my ($self) = shift;
+  my $self = shift;
   my $events = [];
 
   if ( my $raw_line = shift ( @{ $self->{BUFFER} } ) ) {
@@ -135,7 +128,7 @@ sub put {
   foreach my $event (@$events) {
     if (ref $event eq 'HASH') {
       my $colonify = ( defined $event->{colonify} ? $event->{colonify} : $self->{colonify} );
-      if ( PUT_LITERAL || checkargs($event) ) {
+      if ( _PUT_LITERAL || _checkargs($event) ) {
         my $raw_line = '';
         $raw_line .= (':' . $event->{'prefix'} . ' ') if (exists $event->{'prefix'});
         $raw_line .= $event->{'command'};
@@ -156,7 +149,8 @@ sub put {
         next;
       }
     } else {
-      warn "non hashref passed to put(): $event\n";
+      warn __PACKAGE__ . " non hashref passed to put(): \"$event\"\n";
+      push @$raw_lines, $event if ref $event eq 'SCALAR';
     }
   }
   return $raw_lines;
@@ -164,7 +158,7 @@ sub put {
 
 
 # This thing is far from correct, dont use it.
-sub checkargs {
+sub _checkargs {
   my $event = shift || return;
   warn("Invalid characters in prefix: " . $event->{'prefix'} . "\n")
     if ($event->{'prefix'} =~ m/[\x00\x0a\x0d\x20]/);
@@ -207,21 +201,29 @@ POE::Filter::IRCD -- A POE-based parser for the IRC protocol.
 POE::Filter::IRCD provides a convenient way of parsing and creating IRC protocol
 lines. 
 
-=head1 METHODS
+=head1 CONSTRUCTOR
 
 =over
 
-=item *
-
-new
+=item new
 
 Creates a new POE::Filter::IRCD object. Takes two optional arguments: DEBUG which will print 
 all lines received to STDERR; 'colonify', set to 1 to force the filter to always colonify the
 last param passed in a put(), default is 0. See below for more detail.
 
-=item *
+=back
 
-get
+=head1 METHODS
+
+=over
+
+=item get_one_start
+
+=item get_one
+
+=item get_pending
+
+=item get
 
 Takes an arrayref which is contains lines of IRC formatted input. Returns an arrayref of hashrefs
 which represents the lines. The hashref contains the following fields:
@@ -242,9 +244,7 @@ For example, if the filter receives the following line, the following hashref is
 		raw_line => ':moo.server.net 001 lamebot :Welcome to the IRC network lamebot',
 	   }
 
-=item *
-
-put
+=item put
 
 Takes an arrayref containing hashrefs of IRC data and returns an arrayref containing IRC formatted lines.
 Optionally, one can specify 'colonify' to override the global colonification option.
@@ -259,9 +259,7 @@ eg.
 
   $filter->put( [ $hashref ] );
 
-=item *
-
-debug
+=item debug
 
 With a true or false argument, enables or disables debug output respectively. Without an argument the behaviour is to toggle the debug status.
 
@@ -277,9 +275,11 @@ Jonathan Steinert
 
 =head1 SEE ALSO
 
-L<POE|POE>
-L<POE::Filter|POE::Filter>
-L<POE::Filter::Stackable|POE::Filter::Stackable>
+L<POE>
+
+L<POE::Filter>
+
+L<POE::Filter::Stackable>
 
 =cut
 
