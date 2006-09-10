@@ -1,6 +1,7 @@
 POE::Filter::IRCD
 =================
 
+2.0	Makefile.PL was executable. Fixed.
 1.9	Added pod and pod coverage tests. Documentation fixes.
 1.8	Added get_pending() method.
 1.7	Bug in put() that choked when {params} didn't exist.
