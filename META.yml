@@ -1,11 +1,13 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         POE-Filter-IRCD
-version:      2.0
-version_from: lib/POE/Filter/IRCD.pm
-installdirs:  site
-requires:
-    POE:                           0.3202
-
+author: 'Chris Williams <chris@bingosnet.co.uk>'
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+generated_by: Module::Install version 0.64
+license: perl
+module_name: POE::Filter::IRCD
+name: POE-Filter-IRCD
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  POE: 0.3202
+version: 2.1
