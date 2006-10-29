@@ -6,7 +6,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.1';
+$VERSION = '2.2';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -85,7 +85,7 @@ sub get {
       push @{$event->{'params'}}, $trailing if ( defined( $trailing ) );
       push @$events, $event;
     } else {
-      warn "Recieved line $raw_line that is not IRC protocol\n";
+      warn "Received line $raw_line that is not IRC protocol\n";
     }
   }
   return $events;
@@ -111,7 +111,7 @@ sub get_one {
       push @{$event->{'params'}}, $trailing if ( defined( $trailing ) );
       push @$events, $event;
     } else {
-      warn "Recieved line $raw_line that is not IRC protocol\n";
+      warn "Received line $raw_line that is not IRC protocol\n";
     }
   }
   return $events;
@@ -199,7 +199,8 @@ POE::Filter::IRCD -- A POE-based parser for the IRC protocol.
 =head1 DESCRIPTION
 
 POE::Filter::IRCD provides a convenient way of parsing and creating IRC protocol
-lines. 
+lines. It provides the parsing engine for L<POE::Component::Server::IRC> and L<POE::Component::IRC>.
+A standalone version exists as L<Parse::IRC>.
 
 =head1 CONSTRUCTOR
 
@@ -207,9 +208,11 @@ lines.
 
 =item new
 
-Creates a new POE::Filter::IRCD object. Takes two optional arguments: DEBUG which will print 
-all lines received to STDERR; 'colonify', set to 1 to force the filter to always colonify the
-last param passed in a put(), default is 0. See below for more detail.
+Creates a new POE::Filter::IRCD object. Takes two optional arguments: 
+
+  'DEBUG', which will print all lines received to STDERR;
+  'colonify', set to 1 to force the filter to always colonify the last param passed in a put(),
+              default is 0. See below for more detail.
 
 =back
 
@@ -280,6 +283,12 @@ L<POE>
 L<POE::Filter>
 
 L<POE::Filter::Stackable>
+
+L<POE::Component::Server::IRC>
+
+L<POE::Component::IRC>
+
+L<Parse::IRC>
 
 =cut
 

@@ -2,7 +2,6 @@ author: 'Chris Williams <chris@bingosnet.co.uk>'
 distribution_type: module
 generated_by: Module::Install version 0.64
 license: perl
-module_name: POE::Filter::IRCD
 name: POE-Filter-IRCD
 no_index:
   directory:
@@ -10,4 +9,4 @@ no_index:
     - t
 requires:
   POE: 0.3202
-version: 2.1
+version: 2.2
