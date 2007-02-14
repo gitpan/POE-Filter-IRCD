@@ -1,12 +1,11 @@
 package POE::Filter::IRCD;
 
 use strict;
-use warnings;
 use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.2';
+$VERSION = '2.30';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -51,23 +50,20 @@ sub new {
   my $type = shift;
   croak "$type requires an even number of parameters" if @_ % 2;
   my $buffer = { @_ };
+  $buffer->{uc $_} = delete $buffer->{$_} for keys %{ $buffer };
   $buffer->{BUFFER} = [];
-  return bless($buffer, $type);
+  return bless $buffer, $type;
 }
 
 sub debug {
   my $self = shift;
   my $value = shift;
 
-  if ( defined ( $value ) ) {
+  if ( defined $value ) {
 	$self->{DEBUG} = $value;
 	return $self->{DEBUG};
   }
-  if ( $self->{DEBUG} ) {
-	$self->{DEBUG} = 0;
-  } else {
-	$self->{DEBUG} = 1;
-  }
+  $self->{DEBUG} = $value;
 }
 
 sub get {
@@ -75,16 +71,17 @@ sub get {
   my $events = [];
 
   foreach my $raw_line (@$raw_lines) {
-    warn "->$raw_line \n" if ( $self->{DEBUG} );
+    warn "->$raw_line \n" if $self->{DEBUG};
     if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
       my $event = { raw_line => $raw_line };
-      $event->{'prefix'} = $prefix if ($prefix);
-      $event->{'command'} = uc($command);
-      $event->{'params'} = [] if ( defined ( $middles ) || defined ( $trailing ) );
-      push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if ( defined ( $middles ) );
-      push @{$event->{'params'}}, $trailing if ( defined( $trailing ) );
+      $event->{'prefix'} = $prefix if $prefix;
+      $event->{'command'} = uc $command;
+      $event->{'params'} = [] if defined ( $middles ) || defined ( $trailing );
+      push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if defined $middles;
+      push @{$event->{'params'}}, $trailing if defined $trailing;
       push @$events, $event;
-    } else {
+    } 
+    else {
       warn "Received line $raw_line that is not IRC protocol\n";
     }
   }
@@ -101,16 +98,17 @@ sub get_one {
   my $events = [];
 
   if ( my $raw_line = shift ( @{ $self->{BUFFER} } ) ) {
-    warn "->$raw_line \n" if ( $self->{DEBUG} );
+    warn "->$raw_line \n" if $self->{DEBUG};
     if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
       my $event = { raw_line => $raw_line };
-      $event->{'prefix'} = $prefix if ($prefix);
-      $event->{'command'} = uc($command);
-      $event->{'params'} = [] if ( defined ( $middles ) || defined ( $trailing ) );
-      push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if ( defined ( $middles ) );
-      push @{$event->{'params'}}, $trailing if ( defined( $trailing ) );
+      $event->{'prefix'} = $prefix if $prefix;
+      $event->{'command'} = uc $command;
+      $event->{'params'} = [] if defined ( $middles ) || defined ( $trailing );
+      push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if defined $middles;
+      push @{$event->{'params'}}, $trailing if defined $trailing;
       push @$events, $event;
-    } else {
+    } 
+    else {
       warn "Received line $raw_line that is not IRC protocol\n";
     }
   }
@@ -127,10 +125,10 @@ sub put {
 
   foreach my $event (@$events) {
     if (ref $event eq 'HASH') {
-      my $colonify = ( defined $event->{colonify} ? $event->{colonify} : $self->{colonify} );
+      my $colonify = ( defined $event->{colonify} ? $event->{colonify} : $self->{COLONIFY} );
       if ( _PUT_LITERAL || _checkargs($event) ) {
         my $raw_line = '';
-        $raw_line .= (':' . $event->{'prefix'} . ' ') if (exists $event->{'prefix'});
+        $raw_line .= (':' . $event->{'prefix'} . ' ') if exists $event->{'prefix'};
         $raw_line .= $event->{'command'};
 	if ( $event->{'params'} and ref $event->{'params'} eq 'ARRAY' ) {
 		my $params = [ @{ $event->{'params'} } ];
@@ -140,15 +138,17 @@ sub put {
 			$raw_line .= $param . ' ';
 			$param = shift @$params;
 		}
-		$raw_line .= ':' if ( $param =~ m/\x20/ or $colonify );
+		$raw_line .= ':' if $param =~ m/\x20/ or $colonify;
 		$raw_line .= $param;
 	}
         push @$raw_lines, $raw_line;
-        warn "<-$raw_line \n" if ( $self->{DEBUG} );
-      } else {
+        warn "<-$raw_line \n" if $self->{DEBUG};
+      } 
+      else {
         next;
       }
-    } else {
+    } 
+    else {
       warn __PACKAGE__ . " non hashref passed to put(): \"$event\"\n";
       push @$raw_lines, $event if ref $event eq 'SCALAR';
     }
@@ -186,7 +186,7 @@ POE::Filter::IRCD -- A POE-based parser for the IRC protocol.
 
     use POE::Filter::IRCD;
 
-    my $filter = POE::Filter::IRCD->new( DEBUG => 1, colonify => 0 );
+    my $filter = POE::Filter::IRCD->new( debug => 1, colonify => 0 );
     my $arrayref = $filter->get( [ $hashref ] );
     my $arrayref2 = $filter->put( $arrayref );
 
@@ -210,7 +210,7 @@ A standalone version exists as L<Parse::IRC>.
 
 Creates a new POE::Filter::IRCD object. Takes two optional arguments: 
 
-  'DEBUG', which will print all lines received to STDERR;
+  'debug', which will print all lines received to STDERR;
   'colonify', set to 1 to force the filter to always colonify the last param passed in a put(),
               default is 0. See below for more detail.
 
