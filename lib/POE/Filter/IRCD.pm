@@ -5,7 +5,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.30';
+$VERSION = '2.31';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -180,7 +180,7 @@ __END__
 
 =head1 NAME
 
-POE::Filter::IRCD -- A POE-based parser for the IRC protocol.
+POE::Filter::IRCD - A POE-based parser for the IRC protocol.
 
 =head1 SYNOPSIS
 
