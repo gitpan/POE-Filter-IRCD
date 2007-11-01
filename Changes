@@ -1,6 +1,7 @@
 POE::Filter::IRCD
 =================
 
+2.32	Updated Module::Install to 0.68
 2.31	Fixed abstract_from and build_requires in Makefile.PL
 2.30	Code refactoring. Doc fixes. Updated tests.
 2.2	Switched fully to Module::Install. Documentation amendments.

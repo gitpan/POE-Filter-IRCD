@@ -5,18 +5,18 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.31';
+$VERSION = '2.32';
 
 sub _PUT_LITERAL () { 1 }
 
 # Probably some other stuff should go here.
 
-our $g = {
+my $g = {
   space			=> qr/\x20+/o,
   trailing_space	=> qr/\x20*/o,
 };
 
-our $irc_regex = qr/^
+my $irc_regex = qr/^
   (?:
     \x3a                #  : comes before hand
     (\S+)               #  [prefix]
