@@ -1,4 +1,4 @@
-use Test::More tests => 9;
+use Test::More tests => 11;
 BEGIN { use_ok('POE::Filter::IRCD') };
 
 my $filter = POE::Filter::IRCD->new();
@@ -27,3 +27,14 @@ foreach my $irc_event ( @{ $filter2->get( [ $original2 ] ) } ) {
 	ok( $parsed eq $original2, 'Self Test' );
   }
 }
+
+my $filter3 = $filter2->clone();
+
+isa_ok( $filter3, 'POE::Filter::IRCD' );
+
+foreach my $irc_event ( @{ $filter3->get( [ $original2 ] ) } ) {
+  foreach my $parsed ( @{ $filter3->put( [ $irc_event ] ) } ) {
+	ok( $parsed eq $original2, 'Self Test' );
+  }
+}
+

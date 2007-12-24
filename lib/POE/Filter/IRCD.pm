@@ -5,7 +5,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.32';
+$VERSION = '2.34';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -156,6 +156,13 @@ sub put {
   return $raw_lines;
 }
 
+sub clone {
+  my $self = shift;
+  my $nself = { };
+  $nself->{$_} = $self->{$_} for keys %{ $self };
+  $nself->{BUFFER} = [ ];
+  return bless $nself, ref $self;
+}
 
 # This thing is far from correct, dont use it.
 sub _checkargs {
@@ -261,6 +268,10 @@ eg.
 	      };
 
   $filter->put( [ $hashref ] );
+
+=item clone
+
+Makes a copy of the filter, and clears the copy's buffer.
 
 =item debug
 
