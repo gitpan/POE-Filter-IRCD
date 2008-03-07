@@ -1,6 +1,7 @@
 POE::Filter::IRCD
 =================
 
+2.36	Kwalitee fixes.
 2.35	Changed test file naming convention
 2.34	Added clone() method as reported by Hinrik √rn Sigur√∞sson.
 2.32	Updated Module::Install to 0.68

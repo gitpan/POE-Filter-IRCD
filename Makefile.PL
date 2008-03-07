@@ -5,5 +5,7 @@ license 'perl';
 version_from 'lib/POE/Filter/IRCD.pm';
 abstract_from 'lib/POE/Filter/IRCD.pm';
 build_requires 'Test::More' => 0.47;
+requires 'warnings::compat' => 0 if $] < 5.006;
 requires 'POE' => 0.3202;
+requires 'POE::Filter' => 0;
 WriteAll;
