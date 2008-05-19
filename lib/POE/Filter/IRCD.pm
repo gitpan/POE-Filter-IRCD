@@ -6,7 +6,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.36';
+$VERSION = '2.38';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -287,6 +287,12 @@ Chris Williams <chris@bingosnet.co.uk>
 =head1 AUTHOR
 
 Jonathan Steinert
+
+=head1 LICENSE
+
+Copyright C<(c)> Chris Williams and Jonathan Steinert
+
+This module may be used, modified, and distributed under the same terms as Perl itself. Please see the license that came with your Perl distribution for details.
 
 =head1 SEE ALSO
 
