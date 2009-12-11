@@ -6,7 +6,7 @@ use Carp;
 use vars qw($VERSION);
 use base qw(POE::Filter);
 
-$VERSION = '2.40';
+$VERSION = '2.42';
 
 sub _PUT_LITERAL () { 1 }
 
@@ -37,7 +37,7 @@ my $irc_regex = qr/^
         $g->{'space'}
         [^\x00\x0a\x0d\x20\x3a]
         [^\x00\x0a\x0d\x20]*
-      ){0,13}           # then match on 0-13 of these,
+      )*                # then match as many of these as possible
     )
   )?                    # otherwise dont match at all.
   (?:
