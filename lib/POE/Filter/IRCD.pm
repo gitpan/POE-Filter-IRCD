@@ -1,12 +1,14 @@
 package POE::Filter::IRCD;
+{
+  $POE::Filter::IRCD::VERSION = '2.44';
+}
+
+#ABSTRACT: A POE-based parser for the IRC protocol
 
 use strict;
 use warnings;
 use Carp;
-use vars qw($VERSION);
-use base qw(POE::Filter);
-
-$VERSION = '2.42';
+use base qw[POE::Filter];
 
 sub _PUT_LITERAL () { 1 }
 
@@ -18,6 +20,11 @@ my $g = {
 };
 
 my $irc_regex = qr/^
+  (?:
+    \x40                # '@'-prefixed IRCv3.2 messsage tags.
+    (\S+)               # [tags] Semi-colon delimited key=value list
+    $g->{space}
+  )?
   (?:
     \x3a                #  : comes before hand
     (\S+)               #  [prefix]
@@ -73,15 +80,21 @@ sub get {
 
   foreach my $raw_line (@$raw_lines) {
     warn "->$raw_line \n" if $self->{DEBUG};
-    if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
+    if ( my($tags, $prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
       my $event = { raw_line => $raw_line };
+      if ($tags) {
+        for my $tag_pair (split /;/, $tags) {
+          my ($thistag, $thisval) = split /=/, $tag_pair;
+          $event->{tags}->{$thistag} = $thisval
+        }
+      }
       $event->{'prefix'} = $prefix if $prefix;
       $event->{'command'} = uc $command;
       $event->{'params'} = [] if defined ( $middles ) || defined ( $trailing );
       push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if defined $middles;
       push @{$event->{'params'}}, $trailing if defined $trailing;
       push @$events, $event;
-    } 
+    }
     else {
       warn "Received line $raw_line that is not IRC protocol\n";
     }
@@ -100,15 +113,21 @@ sub get_one {
 
   if ( my $raw_line = shift ( @{ $self->{BUFFER} } ) ) {
     warn "->$raw_line \n" if $self->{DEBUG};
-    if ( my($prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
+    if ( my($tags, $prefix, $command, $middles, $trailing) = $raw_line =~ m/$irc_regex/ ) {
       my $event = { raw_line => $raw_line };
+      if ($tags) {
+        for my $tag_pair (split /;/, $tags) {
+          my ($thistag, $thisval) = split /=/, $tag_pair;
+          $event->{tags}->{$thistag} = $thisval
+        }
+      }
       $event->{'prefix'} = $prefix if $prefix;
       $event->{'command'} = uc $command;
       $event->{'params'} = [] if defined ( $middles ) || defined ( $trailing );
       push @{$event->{'params'}}, (split /$g->{'space'}/, $middles) if defined $middles;
       push @{$event->{'params'}}, $trailing if defined $trailing;
       push @$events, $event;
-    } 
+    }
     else {
       warn "Received line $raw_line that is not IRC protocol\n";
     }
@@ -129,6 +148,15 @@ sub put {
       my $colonify = ( defined $event->{colonify} ? $event->{colonify} : $self->{COLONIFY} );
       if ( _PUT_LITERAL || _checkargs($event) ) {
         my $raw_line = '';
+        if ( ref $event->{tags} eq 'HASH' && keys %{ $event->{tags} } ) {
+          $raw_line .= '@';
+          my @tags = %{ $event->{tags} };
+          while (my ($thistag, $thisval) = splice @tags, 0, 2) {
+            $raw_line .= $thistag . ( defined $thisval ? '='.$thisval : '' );
+            $raw_line .= ';' if @tags;
+          }
+          $raw_line .= ' ';
+        }
         $raw_line .= (':' . $event->{'prefix'} . ' ') if exists $event->{'prefix'};
         $raw_line .= $event->{'command'};
 	if ( $event->{'params'} and ref $event->{'params'} eq 'ARRAY' ) {
@@ -144,11 +172,11 @@ sub put {
 	}
         push @$raw_lines, $raw_line;
         warn "<-$raw_line \n" if $self->{DEBUG};
-      } 
+      }
       else {
         next;
       }
-    } 
+    }
     else {
       warn __PACKAGE__ . " non hashref passed to put(): \"$event\"\n";
       push @$raw_lines, $event if ref $event eq 'SCALAR';
@@ -186,9 +214,15 @@ sub _checkargs {
 
 __END__
 
+=pod
+
 =head1 NAME
 
-POE::Filter::IRCD - A POE-based parser for the IRC protocol.
+POE::Filter::IRCD - A POE-based parser for the IRC protocol
+
+=head1 VERSION
+
+version 2.44
 
 =head1 SYNOPSIS
 
@@ -216,7 +250,7 @@ A standalone version exists as L<Parse::IRC>.
 
 =item C<new>
 
-Creates a new POE::Filter::IRCD object. Takes two optional arguments: 
+Creates a new POE::Filter::IRCD object. Takes two optional arguments:
 
   'debug', which will print all lines received to STDERR;
   'colonify', set to 1 to force the filter to always colonify the last param passed in a put(),
@@ -242,7 +276,7 @@ which represents the lines. The hashref contains the following fields:
   prefix
   command
   params ( this is an arrayref )
-  raw_line 
+  raw_line
 
 For example, if the filter receives the following line, the following hashref is produced:
 
@@ -261,9 +295,9 @@ Takes an arrayref containing hashrefs of IRC data and returns an arrayref contai
 Optionally, one can specify 'colonify' to override the global colonification option.
 eg.
 
-  $hashref = { 
-		command => 'PRIVMSG', 
-		prefix => 'FooBar!foobar@foobar.com', 
+  $hashref = {
+		command => 'PRIVMSG',
+		prefix => 'FooBar!foobar@foobar.com',
 		params => [ '#foobar', 'boo!' ],
 		colonify => 1, # Override the global colonify option for this record only.
 	      };
@@ -280,20 +314,6 @@ With a true or false argument, enables or disables debug output respectively. Wi
 
 =back
 
-=head1 MAINTAINER
-
-Chris Williams <chris@bingosnet.co.uk>
-
-=head1 AUTHOR
-
-Jonathan Steinert
-
-=head1 LICENSE
-
-Copyright E<copy> Chris Williams and Jonathan Steinert
-
-This module may be used, modified, and distributed under the same terms as Perl itself. Please see the license that came with your Perl distribution for details.
-
 =head1 SEE ALSO
 
 L<POE>
@@ -307,5 +327,16 @@ L<POE::Component::Server::IRC>
 L<POE::Component::IRC>
 
 L<Parse::IRC>
+
+=head1 AUTHOR
+
+Chris Williams <chris@bingosnet.co.uk>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Chris Williams and Jonathan Steinert.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
